@@ -3,9 +3,9 @@
 
 AC_PREREQ([2.71])
 AC_INIT([libbutton], [0.0.1], [glen.cornell@gmail.com])
-AC_CONFIG_SRCDIR([ptt.h])
+AC_CONFIG_SRCDIR([src/ptt.h])
 AC_CONFIG_MACRO_DIRS([m4])
-AC_CONFIG_HEADERS([ptt-config.h])
+AC_CONFIG_HEADERS([src/ptt-config.h])
 
 # Initiaize automake
 AM_INIT_AUTOMAKE([foreign subdir-objects])
