@@ -46,6 +46,6 @@ gcc -o test test.c $(pkg-config --cflags --libs libbutton)
 
 Things I need to finish:
 
-- [ ] Remove pthreads from the evdev driver
-- [ ] Better integration with existing event loops (libevent2, libuv, etc.)
-- [ ] Test
+- [ ] Examples
+- [ ] Tests
+- [ ] Documentation
