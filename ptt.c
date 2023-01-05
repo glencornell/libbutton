@@ -1,30 +1,39 @@
+#include "ptt-config.h"
 #include "ptt.h"
 #include "ptt-device.h"
 #include "ptt-button.h"
 #include "ptt-config.h"
-#include "ptt-evdev.h"
-#include "ptt-gpio.h"
+#include "ptt-drv-evdev.h"
+#include "ptt-drv-gpio.h"
+#include <stdlib.h>
 
 // Each implementation should have its own recognize() and create()
 // functions.
 typedef struct {
   ptt_device_recognize_proc_t recognize;
   ptt_device_create_proc_t create;
-} ptt_table_t;
+} ptt_constructor_table_t;
 
+// The following table contains the recognize() and device_create()
+// static class methods that each driver implements.  The
+// ptt_device_create() function below iterates through this table to
+// open the appropriate driver.
 static const ptt_constructor_table_t ptt_constructor_table[] = {
 #if HAVE_EVDEV
   {
-    &ptt_evdev_recognize_proc,
-    &ptt_evdev_create_proc
+    &ptt_evdev_recognize,
+    &ptt_evdev_create
   },
 #endif // HAVE_EVDEV
-#if HAVE_GPIO
+#if HAVE_GPIOD
   {
-    &ptt_gpio_recognize_proc,
-    &ptt_gpio_create_proc
+    &ptt_gpio_recognize,
+    &ptt_gpio_create
   },
-#endif // HAVE_GPIO
+#endif // HAVE_GPIOD
+  // TODO: create a null driver?
+  // TODO: create a curses driver?
+  // TODO: create an X11 driver?
 };
 
 bool ptt_device_recognize(const char *device_name) {
@@ -46,15 +55,7 @@ ptt_device_t *ptt_device_create(const char *device_name) {
   const int table_size = sizeof(ptt_constructor_table) / sizeof(ptt_constructor_table_t);
   for (i = 0; i < table_size; i++) {
     if (ptt_constructor_table[i].recognize(device_name)) {
-      device = (ptt_device_t *)malloc(sizeof(ptt_device_t));
-      device->fd = -1;
-      device->destroy = NULL;
-      device->has_fd = &ptt_priv_has_fd;
-      device->get_fd = &ptt_priv_get_fd;
-      if (ptt_constructor_table[i].create(device, device_name) == NULL) {
-        free(device);
-        device = NULL;
-      }
+      device = ptt_constructor_table[i].create(device_name);
       break;
     }
   }
@@ -62,18 +63,11 @@ ptt_device_t *ptt_device_create(const char *device_name) {
 }
 
 void ptt_device_destroy(ptt_device_t *device) {
-  // TODO: iterate through all keys and deallocate
-  device->destroy_proc(device);
-  
-  device->fd = -1;
-  device->destroy = NULL;
-  device->has_fd = NULL;
-  device->get_fd = NULL;
-  free(device);
+  device->destroy(device);
 }
 
 bool ptt_button_is_pressed(ptt_button_t *button) {
-  return button->is_pressed_proc(button);
+  return button->is_pressed(button);
 }
 
 void ptt_button_add_pressed_cb(ptt_button_t *button, ptt_button_pressed_cb_t cb, void *user_data) {

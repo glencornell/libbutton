@@ -8,6 +8,8 @@ typedef struct ptt_button_list_s {
 } ptt_button_list_t;
 
 // device list operations
+void ptt_button_list_constructor(ptt_button_list_t *list);
+void ptt_button_list_destructor(ptt_button_list_t *list);
 ptt_button_t *ptt_button_list_begin(ptt_button_list_t *list);
 ptt_button_t *ptt_button_list_end(ptt_button_list_t *list);
 void ptt_button_list_push_front(ptt_button_list_t *list, ptt_button_t *item);
